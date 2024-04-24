@@ -1,0 +1,179 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>SlowTube</title>
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+    integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+    crossorigin="anonymous"></script>
+  <script src="bootstrap/bootstrap.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.css">
+</head>
+
+<body>
+
+  <div class="row">
+    <div class="col-sm-3" style="padding-left: 2rem; padding-top: 1rem;">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">Information</h5>
+
+          <h6 class="card-subtitle mb-2 text-muted">Recorded and calculated metrics</h6>
+          <div>Current Buffer: <span id="bufferLevel"></span></div>
+          <div>Reported Bitrate: <span id="reportedBitrate"></span></div>
+          <div>Calculated Bitrate: <span id="calculatedBitrate"></span></div>
+
+          <h6 class="card-subtitle mb-2 mt-2 text-muted">ABR settings</h6>
+          <div>Current Algorithm: <span id="currentAlgorithm"></span></div>
+
+          <h6 class="card-subtitle mb-2 mt-2 text-muted">Video Metadata</h6>
+          <div>Bitrate: <span id="cbr"></span></div>
+          <div>Resolution: <span id="cres"></span></div>
+          <div>Availble bitrates: <span id="ares"></span></div>
+
+          <h6 class="card-subtitle mb-2 mt-2 text-muted">Playback settings</h6>
+          <div>Initial Buffer: <span id="initBuffer">12</span> s</div>
+          <div>Stable Buffer: <span id="stableBuffer">30</span> s</div>
+          <div>Minimum Bitrate: <span id="minBitrate">-1</span> Kbps</div>
+          <div>Maximum Bitrate: <span id="maxBitrate">-1</span> Kbps</div>
+          <div>Pruning Interval: <span id="buffPrune">10</span> s</div>
+          <div>Buffer Ahead (Pruning): <span id="aheadBuff">80</span> s</div>
+        </div>
+      </div>
+      <div class="card mt-2">
+        <div class="card-body">
+          <h5 class="card-title">Player</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Settings</h6>
+          <div class="dropdown">
+            <button class="btn btn-secondary btn-block dropdown-toggle" type="button" id="windowSelect" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Player Size
+            </button>
+            <div class="dropdown-menu btn-block" style="text-align: center;" aria-labelledby="windowSelect">
+              <a id="player-l" class="dropdown-item btn">1280x720</a>
+              <div class="dropdown-divider"></div>
+              <a id="player-m" class="dropdown-item btn">854x480</a>
+              <div class="dropdown-divider"></div>
+              <a id="player-s" class="dropdown-item btn">640x360</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card mt-2">
+        <div class="card-body">
+          <h5 class="card-title">Buffer</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Settings</h6>
+          <div>
+            <label for="initBufferSet">Standard Buffer Size (s)</label>
+            <input type="number" class="form-control" id="initBufferSet" value="12">
+          </div>
+          <div>
+            <label for="stableBufferSet">Buffer Size at Max Quality (s)</label>
+            <input type="number" class="form-control" id="stableBufferSet" value="30">
+          </div>
+          <div>
+            <label for="bufferPruneSet">Buffer Pruning Interval (s)</label>
+            <input type="number" class="form-control" id="bufferPruneSet" value="10">
+          </div>
+          <div>
+            <label for="bufferAheadSet">Max Buffer Size (s) (Ahead of the current timestamp)</label>
+            <input type="number" class="form-control" id="bufferAheadSet" value="80">
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="col-sm-6" style="text-align: center;">
+      <video id="videoPlayer" style="width: 1280px; height: 720px;" controls></video>
+
+      <canvas id="infoChart" width="100%" height="40vh"></canvas>   
+    </div>
+
+
+    <div class="col-sm-3" style="padding-right: 2rem; padding-top: 1rem;">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">ABR</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Set ABR rules here</h6>
+
+          <!--Add buttons for switching ABR rules here-->
+          <div style="margin-bottom: 1rem;">
+            <button id="setDefaultBtn" type="button" class="btn btn-secondary btn-block">Deafult ABR</button>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <button id="setLowestBtn" type="button" class="btn btn-secondary btn-block">LowestBitrate</button>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <button id="setDRBtn" type="button" class="btn btn-secondary btn-block">DownloadRatio</button>
+          </div>   
+          <div style="margin-bottom: 1rem;">
+            <button id="setPartyBtn" type="button" class="btn btn-secondary btn-block">Party</button>
+          </div> 
+          <div style="margin-bottom: 1rem;">
+            <button id="setBBA0Btn" type="button" class="btn btn-secondary btn-block">BBA0</button>
+          </div>
+
+          <h6 class="card-subtitle mb-2 text-muted">Addtional Settings</h6>
+          <div style="margin-bottom: 1rem;">
+            <button id="setFastSwitch" type="button" class="btn btn-secondary btn-block">Fast ABR Switch</button>
+          </div>
+        </div>
+      </div>
+      <div class="card mt-2">
+        <div class="card-body">
+          <h5 class="card-title">Additional Settings</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Bitrate Limiters</h6>
+          <div>
+            <label for="minBitrateSet">Minimum Bitrate (Kbps)</label>
+            <input type="number" class="form-control" id="minBitrateSet" value="-1">
+          </div>
+          <div>
+            <label for="maxBitrateSet">Maximum Bitrate (Kbps)</label>
+            <input type="number" class="form-control" id="maxBitrateSet" value="-1">
+          </div>
+          <div style="margin-top: 1rem; margin-bottom: 2rem;">
+            <button id="setDefaultPlaybackBtn" type="button" class="btn btn-secondary btn-block">Default Playback Settings</button>
+          </div>
+        </div>
+      </div>
+      <div class="card mt-2">
+        <div class="card-body">
+          <h5 class="card-title">Graphing</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Modes</h6>
+          <div style="margin-bottom: 1rem;">
+            <label for="gSetQuality">Tracks "quality" of stream (0-n depending on available bitrates)<br> <strong>Note: </strong>new points are added on SwitchRequests only. More info can be found in the README</label>
+            <button id="gSetQuality" type="button" class="btn btn-secondary btn-block">Quality</button>
+          </div>
+          <div class="dropdown-divider"></div>
+          <div style="margin-bottom: 1rem;">
+            <label for="gSetBuffer">Tracks buffer size in seconds<br><strong>Note: </strong>does not stop with video pause (Use clear graph as needed)</label>
+            <button id="gSetBuffer" type="button" class="btn btn-secondary btn-block">Buffer Size</button>
+          </div>
+          <h6 class="card-subtitle mb-2 text-muted">Other Functions</h6>
+          <div style="margin-bottom: 1rem;">
+            <button id="gCsv" type="button" class="btn btn-block btn-secondary">Save Data (CSV)</button>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <button id="gClear" type="button" class="btn btn-block btn-outline-warning">Clear Graph</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!--Add your rule sources here-->
+  <script src="dash.all.min.js"></script>
+  <script src="ABRules/LowestBitrateRule.js"></script>
+  <script src="ABRules/DownloadRatioRule.js"></script>
+  <script src="ABRules/BBA0.js"></script>
+  <script src="ABRules/PartyRule.js"></script>
+  <script src="graph.js"></script>
+  <script src="main.js"></script>
+
+</body>
+
+</html>
